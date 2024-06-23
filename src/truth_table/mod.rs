@@ -70,7 +70,8 @@ pub fn print_truth_table(expression: &str) {
         }
     }
 
-    let variables: Vec<char> = variables.into_iter().collect();
+    let mut variables: Vec<char> = variables.into_iter().collect();
+    variables.sort();
     let num_vars = variables.len();
     let num_combinations = 1 << num_vars;
 
@@ -90,7 +91,7 @@ pub fn print_truth_table(expression: &str) {
         for combination_index in 0..num_combinations {
             let mut var_values = HashMap::new();
             for (bit_pos, var) in variables.iter().enumerate() {
-                let val = (combination_index & (1 << bit_pos)) != 0;
+                let val = (combination_index >> (num_vars - 1 - bit_pos)) & 1 != 0;
                 var_values.insert(*var, val);
             }
             let result = ast.evaluate(&var_values);
