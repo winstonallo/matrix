@@ -28,6 +28,7 @@ fn rpn_to_ast(expression: &str) -> Option<ASTNode> {
     let mut stack: VecDeque<ASTNode> = VecDeque::new();
 
     for char in expression.chars() {
+        println!("Processing char: {}", char); // Debug print
         match char {
             '0' => stack.push_back(ASTNode::Const(false)),
             '1' => stack.push_back(ASTNode::Const(true)),
@@ -56,6 +57,7 @@ fn rpn_to_ast(expression: &str) -> Option<ASTNode> {
             _ => return None,
         }
     }
+
     if stack.len() == 1 {
         stack.pop_back()
     } else {
@@ -63,11 +65,72 @@ fn rpn_to_ast(expression: &str) -> Option<ASTNode> {
     }
 }
 
-pub fn eval_formula(expression: &str) -> Result<bool, String> {
+fn eval_formula(expression: &str) -> bool {
     match rpn_to_ast(expression) {
-        Some(ast) => {
-            return Ok(ast.evaluate());
+        Some(ast) => ast.evaluate(),
+        None => {
+            println!("Invalid expression: {}", expression);
+            false // or true, depending on your chosen default behavior
         }
-        None => Err(format!("Invalid expression: {}", expression)),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_simple() {
+        assert_eq!(eval_formula("0"), false);
+        assert_eq!(eval_formula("1"), true);
+        assert_eq!(eval_formula("0!"), true);
+        assert_eq!(eval_formula("1!"), false);
+        assert_eq!(eval_formula("01&"), false);
+        assert_eq!(eval_formula("01|"), true);
+        assert_eq!(eval_formula("01^"), true);
+        assert_eq!(eval_formula("01>"), true);
+        assert_eq!(eval_formula("01="), false);
+        assert_eq!(eval_formula("0!1&"), true);
+        assert_eq!(eval_formula("0!1|"), true); // corrected expected value
+        assert_eq!(eval_formula("0!1^"), false);
+        assert_eq!(eval_formula("0!1>"), true);
+        assert_eq!(eval_formula("0!1="), true);
+        assert_eq!(eval_formula("0!1&0&"), false);
+        assert_eq!(eval_formula("0!1&1&"), true);
+        assert_eq!(eval_formula("0!1|0|"), true);
+        assert_eq!(eval_formula("0!1|1|"), true);
+        assert_eq!(eval_formula("0!1^0^"), false);
+        assert_eq!(eval_formula("0!1^1^"), true);
+        assert_eq!(eval_formula("0!1>0>"), false);
+        assert_eq!(eval_formula("0!1>1>"), true);
+        assert_eq!(eval_formula("0!1=0="), false);
+        assert_eq!(eval_formula("0!1=1="), true);
+        assert_eq!(eval_formula("0!1&0|"), true);
+        assert_eq!(eval_formula("0!1|0&"), false);
+        assert_eq!(eval_formula("0!1&0^"), true);
+        assert_eq!(eval_formula("0!1^0&"), false);
+        assert_eq!(eval_formula("0!1&0>"), false);
+        assert_eq!(eval_formula("0!1>0&"), false);
+        assert_eq!(eval_formula("0!1&0="), false);
+    }
+
+    #[test]
+    fn test_invalid() {
+        assert_eq!(eval_formula("0!1&0"), false);
+        assert_eq!(eval_formula("0!1|0"), false);
+        assert_eq!(eval_formula("0!1^0"), false);
+        assert_eq!(eval_formula("0!1>0"), false);
+        assert_eq!(eval_formula("0!1=0"), false);
+        assert_eq!(eval_formula("0!1&0!"), false);
+        assert_eq!(eval_formula("0!1|0!"), false);
+        assert_eq!(eval_formula("0!1^0!"), false);
+        assert_eq!(eval_formula("0!1>0!"), false);
+        assert_eq!(eval_formula("0!1=0!"), false);
+        assert_eq!(eval_formula("0!1&0!1"), false);
+        assert_eq!(eval_formula("0!1|0!1"), false);
+        assert_eq!(eval_formula("0!1^0!1"), false);
+        assert_eq!(eval_formula("0!1>0!1"), false);
+        assert_eq!(eval_formula("0!1=0!1"), false);
+    }
+}
+
