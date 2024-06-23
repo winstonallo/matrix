@@ -1,5 +1,6 @@
 use std::collections::{HashMap, HashSet, VecDeque};
 
+#[derive(Debug, Clone)]
 enum ASTNode {
     Const(char),
     Not(Box<ASTNode>),
@@ -59,6 +60,20 @@ fn rpn_to_ast(expression: &str) -> Option<ASTNode> {
         stack.pop_back()
     } else {
         None
+    }
+}
+impl PartialEq for ASTNode {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (ASTNode::Const(a), ASTNode::Const(b)) => a == b,
+            (ASTNode::Not(a), ASTNode::Not(b)) => a == b,
+            (ASTNode::And(a1, a2), ASTNode::And(b1, b2))
+            | (ASTNode::Or(a1, a2), ASTNode::Or(b1, b2))
+            | (ASTNode::Xor(a1, a2), ASTNode::Xor(b1, b2))
+            | (ASTNode::Implies(a1, a2), ASTNode::Implies(b1, b2))
+            | (ASTNode::Equiv(a1, a2), ASTNode::Equiv(b1, b2)) => a1 == b1 && a2 == b2,
+            _ => false,
+        }
     }
 }
 
@@ -124,5 +139,33 @@ pub fn print_truth_table(expression: &str) {
         print_truth_table_rows(&variables, &ast, combinations);
     } else {
         println!("Invalid expression");
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_rpn_to_ast() {
+        let expression = "AB&C|";
+
+        let ast = rpn_to_ast(expression).unwrap();
+        let expected_ast = ASTNode::Or(
+            Box::new(ASTNode::And(
+                Box::new(ASTNode::Const('A')),
+                Box::new(ASTNode::Const('B')),
+            )),
+            Box::new(ASTNode::Const('C')),
+        );
+        assert_eq!(ast, expected_ast);
+    }
+
+    #[test]
+    fn test_extract_variables() {
+        let expression = "AB&C|";
+        let variables = extract_variables(expression);
+        let expected_vars = vec!['A', 'B', 'C'];
+        assert_eq!(variables, expected_vars);
     }
 }
