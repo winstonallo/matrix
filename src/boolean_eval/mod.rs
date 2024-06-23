@@ -64,9 +64,10 @@ fn rpn_to_ast(expression: &str) -> Option<ASTNode> {
     }
 }
 
-fn eval_formula(expression: &str) -> bool {
+pub fn eval_formula(expression: &str) -> bool {
     match rpn_to_ast(expression) {
-        Some(ast) => ast.evaluate(),
+        Some(ast) => {
+            ast.evaluate()}
         None => {
             println!("Invalid expression: {}", expression);
             false
