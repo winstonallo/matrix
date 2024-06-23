@@ -28,7 +28,6 @@ fn rpn_to_ast(expression: &str) -> Option<ASTNode> {
     let mut stack: VecDeque<ASTNode> = VecDeque::new();
 
     for char in expression.chars() {
-        println!("Processing char: {}", char); // Debug print
         match char {
             '0' => stack.push_back(ASTNode::Const(false)),
             '1' => stack.push_back(ASTNode::Const(true)),
@@ -70,7 +69,7 @@ fn eval_formula(expression: &str) -> bool {
         Some(ast) => ast.evaluate(),
         None => {
             println!("Invalid expression: {}", expression);
-            false // or true, depending on your chosen default behavior
+            false
         }
     }
 }
@@ -91,7 +90,7 @@ mod tests {
         assert_eq!(eval_formula("01>"), true);
         assert_eq!(eval_formula("01="), false);
         assert_eq!(eval_formula("0!1&"), true);
-        assert_eq!(eval_formula("0!1|"), true); // corrected expected value
+        assert_eq!(eval_formula("0!1|"), true);
         assert_eq!(eval_formula("0!1^"), false);
         assert_eq!(eval_formula("0!1>"), true);
         assert_eq!(eval_formula("0!1="), true);
@@ -133,4 +132,3 @@ mod tests {
         assert_eq!(eval_formula("0!1=0!1"), false);
     }
 }
-
