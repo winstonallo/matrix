@@ -62,6 +62,7 @@ fn rpn_to_ast(expression: &str) -> Option<ASTNode> {
         None
     }
 }
+
 impl PartialEq for ASTNode {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
