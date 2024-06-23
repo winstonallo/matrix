@@ -11,9 +11,9 @@ enum ASTNode {
 }
 
 impl ASTNode {
-    fn evaluate(&self, vars: &std::collections::HashMap<char, bool>) -> bool {
+    fn evaluate(&self, vars: &HashMap<char, bool>) -> bool {
         match self {
-            ASTNode::Const(val) => vars[val],
+            ASTNode::Const(val) => *vars.get(val).unwrap_or(&false),
             ASTNode::Not(expr) => !expr.evaluate(vars),
             ASTNode::And(left, right) => left.evaluate(vars) && right.evaluate(vars),
             ASTNode::Or(left, right) => left.evaluate(vars) || right.evaluate(vars),
@@ -62,45 +62,66 @@ fn rpn_to_ast(expression: &str) -> Option<ASTNode> {
     }
 }
 
-pub fn print_truth_table(expression: &str) {
+fn extract_variables(expression: &str) -> Vec<char> {
     let mut variables = HashSet::new();
     for char in expression.chars() {
         if char.is_ascii_uppercase() {
             variables.insert(char);
         }
     }
-
     let mut variables: Vec<char> = variables.into_iter().collect();
     variables.sort();
+    variables
+}
+
+fn generate_var_combinations(variables: &[char]) -> Vec<HashMap<char, bool>> {
     let num_vars = variables.len();
     let num_combinations = 1 << num_vars;
+    let mut combinations = Vec::new();
+
+    for combination_index in 0..num_combinations {
+        let mut var_values = HashMap::new();
+        for (bit_pos, var) in variables.iter().enumerate() {
+            let val = (combination_index >> (num_vars - 1 - bit_pos)) & 1 != 0;
+            var_values.insert(*var, val);
+        }
+        combinations.push(var_values);
+    }
+    combinations
+}
+
+fn print_header(variables: &[char]) {
+    print!("| ");
+    for var in variables {
+        print!("{} | ", var);
+    }
+    println!("= |$");
+
+    print!("|");
+    for _ in variables {
+        print!("---|");
+    }
+    println!("---|$");
+}
+
+fn print_truth_table_rows(vars: &[char], ast: &ASTNode, combs: Vec<HashMap<char, bool>>) {
+    for var_values in combs {
+        let result = ast.evaluate(&var_values);
+        print!("| ");
+        for var in vars {
+            print!("{} | ", if var_values[var] { 1 } else { 0 });
+        }
+        println!("{} |$", if result { 1 } else { 0 });
+    }
+}
+
+pub fn print_truth_table(expression: &str) {
+    let variables = extract_variables(expression);
+    let combinations = generate_var_combinations(&variables);
 
     if let Some(ast) = rpn_to_ast(expression) {
-        print!("| ");
-        for var in &variables {
-            print!("{} | ", var);
-        }
-        println!("= |$");
-
-        print!("|");
-        for _ in &variables {
-            print!("---|");
-        }
-        println!("---|$");
-
-        for combination_index in 0..num_combinations {
-            let mut var_values = HashMap::new();
-            for (bit_pos, var) in variables.iter().enumerate() {
-                let val = (combination_index >> (num_vars - 1 - bit_pos)) & 1 != 0;
-                var_values.insert(*var, val);
-            }
-            let result = ast.evaluate(&var_values);
-            print!("| ");
-            for var in &variables {
-                print!("{} | ", if var_values[var] { 1 } else { 0 });
-            }
-            println!("{} |$", if result { 1 } else { 0 });
-        }
+        print_header(&variables);
+        print_truth_table_rows(&variables, &ast, combinations);
     } else {
         println!("Invalid expression");
     }
