@@ -1,5 +1,6 @@
 use ready_set_boole::adder;
 use ready_set_boole::boolean_eval;
+use ready_set_boole::conjuctive_normal_form;
 use ready_set_boole::gray_code;
 use ready_set_boole::multiplier;
 use ready_set_boole::negation_normal_form;
