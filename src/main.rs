@@ -7,5 +7,5 @@ fn main() {
     println!("3 + 4 = {}", adder::adder(3, 4));
     println!("3 * 4 = {}", multiplier::multiplier(3, 4));
     println!("Gray code for 3: {}", gray_code::gray_code(3));
-    println!("101|& = {}", boolean_eval::eval_formula("101|&"));
+    println!("01&1| = {}", boolean_eval::eval_formula("01&1|"));
 }
